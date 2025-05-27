@@ -37,7 +37,6 @@ export default function Home() {
     setStoreInfo({ ...storeInfo, [name]: value });
   };
 
-  console.log("storeInfo", storeInfo);
   return (
     <>
       <div className="bg-gray-200">
