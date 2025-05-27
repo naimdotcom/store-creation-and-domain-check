@@ -1,6 +1,7 @@
 "use client";
 import FormLabelInfo from "@/components/FormLabelInfo";
-import { MonitorIcon } from "@phosphor-icons/react";
+import FormValidationMessage from "@/components/FormValidationMessage";
+import { GlobeHemisphereWestIcon, MonitorIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 
 type storeInput = {
@@ -46,26 +47,52 @@ export default function Home() {
           <hr className="my-4 bg-black opacity-30" />
 
           {/* Form */}
-          <div>
+          <div className="space-y-8">
             {/* store name */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 items-center gap-2">
               <FormLabelInfo
                 title="Give your online store a name"
                 icon={<MonitorIcon color="blue" size={24} weight="bold" />}
-                description="A great store name is a big part of your success. Make sure it aligns
-with your brand and products."
+                description="A great store name is a big part of your success. Make sure it aligns with your brand and products."
               />
               <input
                 type="text"
                 name="storeName"
                 placeholder="How'd you like to call your store?"
-                className={`border px-2 py-1 rounded-md focus-visible:outline-none ${
+                className={`border px-2 py-3.5 rounded-md focus-visible:outline-none ${
                   validation.storeName ? "border-red-500" : "border-gray-300"
                 }`}
               />
-              {validation.storeName && (
-                <span className="text-red-500">{validation.storeName}</span>
-              )}
+              <FormValidationMessage message={validation.storeName} />
+            </div>
+
+            {/* store subdomain */}
+            <div className="grid grid-cols-2 items-center gap-2 ">
+              <FormLabelInfo
+                title="Your online store subdomain"
+                icon={
+                  <GlobeHemisphereWestIcon
+                    color="blue"
+                    size={24}
+                    weight="fill"
+                  />
+                }
+                description="A SEO-friendly store name is a crucial part of your success. Make sure it aligns with your brand and products."
+              />
+              <div
+                className={`relative  flex border px-2 py-3.5 w-full rounded-md ${
+                  validation.storeName ? "border-red-500" : "border-gray-300"
+                }`}
+              >
+                <input
+                  type="text"
+                  name="storeName"
+                  placeholder="How'd you like to call your store?"
+                  className={`w-[90%] focus-visible:outline-none`}
+                />
+                <span className="text-gray-500 ">.expressitbd.com</span>
+              </div>
+              <FormValidationMessage message={validation.storeName} />
             </div>
           </div>
         </div>

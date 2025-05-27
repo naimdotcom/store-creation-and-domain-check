@@ -12,7 +12,7 @@ const FormLabelInfo = ({ title, description, icon }: Props) => {
       <div>
         <span>{icon}</span>
       </div>
-      <div>
+      <div className="space-y-2">
         <h2 className="font-bold">{title}</h2>
         {/* todo: fix the max width for the description */}
         <p className="text-black max-w-[500px]">{description}</p>
