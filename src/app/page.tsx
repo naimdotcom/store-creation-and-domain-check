@@ -1,6 +1,8 @@
 "use client";
 import FormLabelInfo from "@/components/FormLabelInfo";
 import FormValidationMessage from "@/components/FormValidationMessage";
+import { useDebounce } from "@/hooks/useDebounce";
+import axiosInstance from "@/libs/axiosInstance";
 import { GlobeHemisphereWestIcon, MonitorIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -31,10 +33,73 @@ export default function Home() {
     currency: "",
     email: "",
   });
+  const [isDomainAvailable, setIsDomainAvailable] = useState(false);
+
+  const validateDomainInput = (domain: string) => {
+    const domainRegex = /^(?!-)[a-zA-Z0-9-]{3,63}(?<!-)$/i;
+
+    if (!domain) {
+      setValidation((prev) => ({
+        ...prev,
+        domain: "Domain name is required.",
+      }));
+      setIsDomainAvailable(false);
+      return false;
+    }
+
+    if (domain.length < 3) {
+      setValidation((prev) => ({
+        ...prev,
+        domain: "Domain must be at least 3 characters.",
+      }));
+      setIsDomainAvailable(false);
+      return false;
+    }
+
+    if (!domainRegex.test(domain)) {
+      setValidation((prev) => ({
+        ...prev,
+        domain: "Invalid domain format.",
+      }));
+      setIsDomainAvailable(false);
+      return false;
+    }
+
+    return true;
+  };
+
+  const checkDomain = async (domain: string) => {
+    try {
+      const res = await axiosInstance.get(`${domain}.expressitbd.com`);
+      const isTaken = res.data?.data?.taken;
+
+      if (!isTaken) {
+        setIsDomainAvailable(true);
+        setValidation((prev) => ({ ...prev, domain: "" }));
+      } else {
+        setIsDomainAvailable(false);
+        setValidation((prev) => ({ ...prev, domain: "Domain is taken." }));
+      }
+    } catch (error) {
+      setIsDomainAvailable(false);
+      setValidation((prev) => ({
+        ...prev,
+        domain: "Error checking domain availability.",
+      }));
+    }
+  };
+
+  const debouncedCheckDomain = useDebounce(checkDomain, 500);
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setStoreInfo({ ...storeInfo, [name]: value });
+
+    if (name === "domain") {
+      if (validateDomainInput(value)) {
+        debouncedCheckDomain(value);
+      }
+    }
   };
 
   return (
@@ -57,16 +122,21 @@ export default function Home() {
                   icon={<MonitorIcon color="blue" size={24} weight="bold" />}
                   description="A great store name is a big part of your success. Make sure it aligns with your brand and products."
                 />
-                <input
-                  type="text"
-                  name="storeName"
-                  placeholder="How'd you like to call your store?"
-                  className={`border px-2 py-3.5 rounded-md focus-visible:outline-none ${
-                    validation.storeName ? "border-red-500" : "border-gray-300"
-                  }`}
-                  onChange={handleOnChange}
-                />
-                <FormValidationMessage message={validation.storeName} />
+                <div className="flex flex-col gap-1">
+                  <input
+                    type="text"
+                    name="storeName"
+                    placeholder="How'd you like to call your store?"
+                    className={`border px-2 py-3.5 rounded-md focus-visible:outline-none ${
+                      validation.storeName
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                    value={storeInfo.storeName}
+                    onChange={handleOnChange}
+                  />
+                  <FormValidationMessage message={validation.storeName} />
+                </div>
               </div>
 
               {/* store subdomain */}
@@ -82,21 +152,55 @@ export default function Home() {
                   }
                   description="A SEO-friendly store name is a crucial part of your success. Make sure it aligns with your brand and products."
                 />
-                <div
-                  className={`flex items-center border px-2 py-3.5 w-full rounded-md ${
-                    validation.domain ? "border-red-500" : "border-gray-300"
-                  }`}
-                >
+                <div className="flex flex-col gap-1">
+                  <div
+                    className={`flex items-center border px-2 py-3.5 w-full rounded-md ${
+                      validation.domain ? "border-red-500" : "border-gray-300"
+                    } ${isDomainAvailable ? "border-green-500" : ""}`}
+                  >
+                    <input
+                      type="text"
+                      name="domain"
+                      placeholder="enter your domain name"
+                      className={`w-[90%] focus-visible:outline-none`}
+                      value={storeInfo.domain}
+                      onChange={handleOnChange}
+                    />
+                    <span className="text-gray-500">.expressitbd.com</span>
+                  </div>
+                  <FormValidationMessage message={validation.domain} />
+                  {storeInfo.domain &&
+                    !validation.domain &&
+                    isDomainAvailable && (
+                      <span className="text-green-500">
+                        Domain is available.
+                      </span>
+                    )}
+                </div>
+              </div>
+
+              {/* country */}
+              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
+                <FormLabelInfo
+                  title="Where's your store located?"
+                  icon={<MonitorIcon color="blue" size={24} weight="bold" />}
+                  description="Set your store's default location so we can optimize store access and speed for your customers."
+                />
+                <div className="flex flex-col gap-1">
                   <input
                     type="text"
-                    name="domain"
-                    placeholder="enter your domain name"
-                    className={`w-[90%] focus-visible:outline-none`}
+                    name="storeName"
+                    placeholder="How'd you like to call your store?"
+                    className={`border px-2 py-3.5 rounded-md focus-visible:outline-none ${
+                      validation.storeName
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                    value={storeInfo.storeName}
                     onChange={handleOnChange}
                   />
-                  <span className="text-gray-500">.expressitbd.com</span>
+                  <FormValidationMessage message={validation.storeName} />
                 </div>
-                <FormValidationMessage message={validation.domain} />
               </div>
             </div>
           </div>
