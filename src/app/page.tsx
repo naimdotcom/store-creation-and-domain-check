@@ -5,6 +5,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import axiosInstance from "@/libs/axiosInstance";
 import { GlobeHemisphereWestIcon, MonitorIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import countryjson from "@/data/country.json";
 
 type storeInput = {
   storeName: string;
@@ -91,10 +92,14 @@ export default function Home() {
 
   const debouncedCheckDomain = useDebounce(checkDomain, 500);
 
-  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOnChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setStoreInfo({ ...storeInfo, [name]: value });
-
+    console.log(name, value);
     if (name === "domain") {
       if (validateDomainInput(value)) {
         debouncedCheckDomain(value);
@@ -187,18 +192,19 @@ export default function Home() {
                   description="Set your store's default location so we can optimize store access and speed for your customers."
                 />
                 <div className="flex flex-col gap-1">
-                  <input
-                    type="text"
-                    name="storeName"
-                    placeholder="How'd you like to call your store?"
-                    className={`border px-2 py-3.5 rounded-md focus-visible:outline-none ${
-                      validation.storeName
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                    value={storeInfo.storeName}
+                  <select
+                    name="location"
+                    id=""
+                    className="border px-2 py-3.5 rounded-md focus-visible:outline-none border-gray-300"
+                    value={storeInfo.location}
                     onChange={handleOnChange}
-                  />
+                  >
+                    {countryjson.map((country) => (
+                      <option key={country.code} value={country.name}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
                   <FormValidationMessage message={validation.storeName} />
                 </div>
               </div>
