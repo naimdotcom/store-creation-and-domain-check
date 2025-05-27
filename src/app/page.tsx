@@ -199,11 +199,13 @@ export default function Home() {
                     value={storeInfo.location}
                     onChange={handleOnChange}
                   >
-                    {countryjson.map((country) => (
-                      <option key={country.code} value={country.name}>
-                        {country.name}
-                      </option>
-                    ))}
+                    {countryjson
+                      ? countryjson.map((country) => (
+                          <option key={country.code} value={country.name}>
+                            {country.name}
+                          </option>
+                        ))
+                      : ""}
                   </select>
                   <FormValidationMessage message={validation.storeName} />
                 </div>
