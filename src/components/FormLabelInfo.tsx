@@ -8,13 +8,14 @@ type Props = {
 
 const FormLabelInfo = ({ title, description, icon }: Props) => {
   return (
-    <div>
+    <div className="flex items-start gap-4 ">
       <div>
         <span>{icon}</span>
       </div>
       <div>
-        <h2>{title}</h2>
-        <p>{description}</p>
+        <h2 className="font-bold">{title}</h2>
+        {/* todo: fix the max width for the description */}
+        <p className="text-black max-w-[500px]">{description}</p>
       </div>
     </div>
   );

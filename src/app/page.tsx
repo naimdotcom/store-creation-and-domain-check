@@ -1,9 +1,40 @@
 "use client";
 import FormLabelInfo from "@/components/FormLabelInfo";
-import { Monitor } from "@phosphor-icons/react";
-import Image from "next/image";
+import { MonitorIcon } from "@phosphor-icons/react";
+import { useState } from "react";
+
+type storeInput = {
+  storeName: string;
+  domain: string;
+  location: string;
+  category: string;
+  currency: string;
+  email: string;
+};
 
 export default function Home() {
+  const [storeInfo, setStoreInfo] = useState<storeInput>({
+    storeName: "",
+    domain: "",
+    location: "",
+    category: "",
+    currency: "",
+    email: "",
+  });
+
+  const [validation, setValidation] = useState({
+    storeName: "",
+    domain: "",
+    location: "",
+    category: "",
+    currency: "",
+    email: "",
+  });
+
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setStoreInfo({ ...storeInfo, [name]: value });
+  };
   return (
     <>
       <div className="min-h-screen bg-gray-200 flex items-center justify-center">
@@ -17,13 +48,24 @@ export default function Home() {
           {/* Form */}
           <div>
             {/* store name */}
-            <div>
+            <div className="grid grid-cols-2 gap-2">
               <FormLabelInfo
                 title="Give your online store a name"
-                icon={<Monitor size={32} weight="bold" />}
+                icon={<MonitorIcon color="blue" size={24} weight="bold" />}
                 description="A great store name is a big part of your success. Make sure it aligns
 with your brand and products."
               />
+              <input
+                type="text"
+                name="storeName"
+                placeholder="How'd you like to call your store?"
+                className={`border px-2 py-1 rounded-md focus-visible:outline-none ${
+                  validation.storeName ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {validation.storeName && (
+                <span className="text-red-500">{validation.storeName}</span>
+              )}
             </div>
           </div>
         </div>
