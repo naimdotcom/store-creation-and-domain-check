@@ -13,7 +13,7 @@ const FormLabelInfo = ({ title, description, icon }: Props) => {
         <div className="hidden md:block">
           <span>{icon}</span>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="block md:hidden">{icon}</span>
             <h2 className="font-bold">{title}</h2>
