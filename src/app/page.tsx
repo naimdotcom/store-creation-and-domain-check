@@ -11,76 +11,81 @@ import {
   MonitorIcon,
   ShapesIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import countryjson from "@/data/country.json";
 import categoryjson from "@/data/category.json";
 import currencyJson from "@/data/currency.json";
 import { validateEmail } from "@/utils/validation";
-
-type storeInput = {
-  storeName: string;
-  domain: string;
-  location: string;
-  category: string;
-  currency: string;
-  email: string;
-};
+import { StoreInput, ValidationErrors } from "@/types";
+import { INITIAL_STORE_DATA, INITIAL_VALIDATION } from "@/data/Constant";
+import FormInputField from "@/components/FormInputField";
+import FormSelectField from "@/components/FormSelectField";
+import FormDomainField from "@/components/FormDomainField";
 
 export default function Home() {
-  const [storeInfo, setStoreInfo] = useState<storeInput>({
-    storeName: "",
-    domain: "",
-    location: "",
-    category: "",
-    currency: "",
-    email: "",
-  });
-
-  const [validation, setValidation] = useState({
-    storeName: "",
-    domain: "",
-    location: "",
-    category: "",
-    currency: "",
-    email: "",
-  });
+  const [storeInfo, setStoreInfo] = useState<StoreInput>(INITIAL_STORE_DATA);
+  const [validation, setValidation] =
+    useState<ValidationErrors>(INITIAL_VALIDATION);
   const [isDomainAvailable, setIsDomainAvailable] = useState<boolean>(false);
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
 
-  const validateDomainInput = (domain: string) => {
+  const validateDomainInput = (domain: string): string => {
     const domainRegex = /^(?!-)[a-zA-Z0-9-]{3,63}(?<!-)$/i;
 
-    if (!domain) {
-      setValidation((prev) => ({
-        ...prev,
-        domain: "Domain name is required.",
-      }));
-      setIsDomainAvailable(false);
-      return false;
+    if (!domain) return "Domain name is required.";
+    if (domain.length < 3) return "Domain must be at least 3 characters.";
+    if (!domainRegex.test(domain)) return "Invalid domain format.";
+
+    return "";
+  };
+
+  const validateField = (name: string, value: string): boolean => {
+    let error: string = "";
+
+    switch (name) {
+      case "storeName":
+        if (!value.trim()) {
+          error = "Store name is required.";
+        } else if (value.trim().length < 3) {
+          error = "Store name must be at least 3 characters long.";
+        }
+        break;
+
+      case "domain":
+        error = validateDomainInput(value);
+        break;
+
+      case "email":
+        if (!value) {
+          error = "Email is required.";
+        } else if (validateEmail(value)) {
+          error = "Invalid email format.";
+        }
+        break;
+
+      case "location":
+        if (!value) error = "Location is required.";
+        break;
+
+      case "category":
+        if (!value) error = "Category is required.";
+        break;
+
+      case "currency":
+        if (!value) error = "Currency is required.";
+        break;
     }
 
-    if (domain.length < 3) {
-      setValidation((prev) => ({
-        ...prev,
-        domain: "Domain must be at least 3 characters.",
-      }));
-      setIsDomainAvailable(false);
-      return false;
-    }
-
-    if (!domainRegex.test(domain)) {
-      setValidation((prev) => ({
-        ...prev,
-        domain: "Invalid domain format.",
-      }));
-      setIsDomainAvailable(false);
-      return false;
-    }
-
-    return true;
+    setValidation((prev) => ({ ...prev, [name]: error }));
+    return error === "";
   };
 
   const checkDomain = async (domain: string) => {
+    if (!domain.trim()) {
+      setIsDomainAvailable(false);
+      return;
+    }
+
     try {
       const res = await axiosInstance.get(`${domain}.expressitbd.com`);
       const isTaken = res.data?.data?.taken;
@@ -93,6 +98,7 @@ export default function Home() {
         setValidation((prev) => ({ ...prev, domain: "Domain is taken." }));
       }
     } catch (error) {
+      console.error("Domain check error:", error);
       setIsDomainAvailable(false);
       setValidation((prev) => ({
         ...prev,
@@ -103,47 +109,142 @@ export default function Home() {
 
   const debouncedCheckDomain = useDebounce(checkDomain, 500);
 
-  const handleOnChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setStoreInfo({ ...storeInfo, [name]: value });
-    console.log(name, value);
-    // validate domain
-    if (name === "domain" && validateDomainInput(value)) {
-      debouncedCheckDomain(value);
-    }
-    // validate email
-    if (name == "email" && !validateEmail(value))
-      setValidation((prev) => ({ ...prev, email: "Invalid email format" }));
-    else setValidation((prev) => ({ ...prev, email: "" }));
+  const handleOnChange = useCallback(
+    (
+      e:
+        | React.ChangeEvent<HTMLInputElement>
+        | React.ChangeEvent<HTMLSelectElement>
+    ) => {
+      const { name, value } = e.target;
 
-    if (name == "storeName" && value.length < 3)
-      setValidation((prev) => ({
-        ...prev,
-        storeName: "Store name must be at least 3 characters long",
-      }));
-    else setValidation((prev) => ({ ...prev, storeName: "" }));
-  };
+      // Update state with functional update to avoid stale closure
+      setStoreInfo((prev) => ({ ...prev, [name]: value }));
+
+      // Validate the field
+      const isValid = validateField(name, value);
+
+      // Handle domain checking
+      if (name === "domain" && isValid && value.trim()) {
+        debouncedCheckDomain(value.trim());
+      } else if (name === "domain" && !value.trim()) {
+        setIsDomainAvailable(false);
+      }
+    },
+    [validateField, debouncedCheckDomain]
+  );
 
   useEffect(() => {
-    setIsFormValid(
-      storeInfo.storeName !== "" &&
-        storeInfo.storeName.trim().length >= 3 &&
-        validateDomainInput(storeInfo.domain) &&
-        isDomainAvailable &&
-        storeInfo.location !== "" &&
-        storeInfo.category !== "" &&
-        storeInfo.currency !== "" &&
-        validateEmail(storeInfo.email) &&
-        !Object.values(validation).some((msg) => msg !== "")
+    const hasNoValidationErrors = !Object.values(validation).some(
+      (msg) => msg !== ""
     );
+    const allFieldsFilled = Object.values(storeInfo).every(
+      (value) => value.trim() !== ""
+    );
+    const isDomainValid =
+      validateDomainInput(storeInfo.domain) === "" && isDomainAvailable;
 
-    console.log(isFormValid);
-    return () => {};
-  }, [storeInfo]);
+    setIsFormValid(hasNoValidationErrors && allFieldsFilled && isDomainValid);
+  }, [storeInfo, validation, isDomainAvailable]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isFormValid) {
+      console.log("Creating store with data:", storeInfo);
+      // Handle form submission here
+    }
+  };
+
+  const formFields = useMemo(
+    () => [
+      {
+        name: "storeName",
+        type: "input",
+        inputType: "text",
+        placeholder: "How'd you like to call your store?",
+        title: "Give your online store a name",
+        icon: <MonitorIcon color="blue" size={24} weight="bold" />,
+        description:
+          "A great store name is a big part of your success. Make sure it aligns with your brand and products.",
+        value: storeInfo.storeName,
+        error: validation.storeName,
+      },
+      {
+        name: "domain",
+        type: "domain",
+        placeholder: "Enter your domain name",
+        title: "Your online store subdomain",
+        icon: <GlobeHemisphereWestIcon color="blue" size={24} weight="fill" />,
+        description:
+          "A SEO-friendly store name is a crucial part of your success. Make sure it aligns with your brand and products.",
+        value: storeInfo.domain,
+        error: validation.domain,
+        suffix: ".expressitbd.com",
+        isDomainAvailable,
+      },
+      {
+        name: "location",
+        type: "select",
+        title: "Where's your store located?",
+        icon: <MapPinPlusIcon color="blue" size={24} weight="bold" />,
+        description:
+          "Set your store's default location so we can optimize store access and speed for your customers.",
+        value: storeInfo.location,
+        error: validation.location,
+        options:
+          countryjson?.map((country) => ({
+            value: country.name,
+            label: country.name,
+          })) || [],
+        placeholder: "Select a country",
+      },
+      {
+        name: "category",
+        type: "select",
+        title: "What's your Category?",
+        icon: <ShapesIcon color="blue" size={24} weight="bold" />,
+        description:
+          "Set your store's default category so that we can optimize store access and speed for your customers.",
+        value: storeInfo.category,
+        error: validation.category,
+        options:
+          categoryjson?.map((cat) => ({
+            value: cat.value,
+            label: cat.label,
+          })) || [],
+        placeholder: "Select a category",
+      },
+      {
+        name: "currency",
+        type: "select",
+        title: "Choose store currency",
+        icon: <CurrencyCircleDollarIcon color="blue" size={24} weight="bold" />,
+        description: "This is the main currency you wish to sell in.",
+        value: storeInfo.currency,
+        error: validation.currency,
+        options:
+          Object.entries(currencyJson)?.map(([code, name]) => ({
+            value: code,
+            label: `(${code}) ${name}`,
+          })) || [],
+        placeholder: "Select a currency",
+      },
+      {
+        name: "email",
+        type: "input",
+        inputType: "email",
+        placeholder: "Enter your contact email",
+        title: "Store contact email",
+        icon: <EnvelopeSimpleIcon color="blue" size={24} weight="bold" />,
+        description:
+          "This is the email you'll use to send notifications to and receive orders from customers.",
+        value: storeInfo.email,
+        error: validation.email,
+      },
+    ],
+    [storeInfo, validation, isDomainAvailable]
+  );
+
+  console.log("storeInfo", storeInfo);
 
   return (
     <>
@@ -157,193 +258,50 @@ export default function Home() {
             <hr className="my-4 bg-black opacity-30" />
 
             {/* Form */}
-            <div className="space-y-4">
-              {/* store name */}
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
-                <FormLabelInfo
-                  title="Give your online store a name"
-                  icon={<MonitorIcon color="blue" size={24} weight="bold" />}
-                  description="A great store name is a big part of your success. Make sure it aligns with your brand and products."
-                />
-                <div className="flex flex-col gap-1">
-                  <input
-                    type="text"
-                    name="storeName"
-                    placeholder="How'd you like to call your store?"
-                    className={`border px-2 py-3.5 rounded-md focus-visible:outline-none ${
-                      validation.storeName
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                    value={storeInfo.storeName}
-                    onChange={handleOnChange}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {formFields.map((field) => (
+                <div
+                  key={field.name}
+                  className="grid grid-cols-1 md:grid-cols-2 items-start gap-4"
+                >
+                  <FormLabelInfo
+                    title={field.title}
+                    icon={field.icon}
+                    description={field.description}
                   />
-                  <FormValidationMessage message={validation.storeName} />
-                </div>
-              </div>
-              {/* end store name */}
-
-              {/* store subdomain */}
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2 ">
-                <FormLabelInfo
-                  title="Your online store subdomain"
-                  icon={
-                    <GlobeHemisphereWestIcon
-                      color="blue"
-                      size={24}
-                      weight="fill"
-                    />
-                  }
-                  description="A SEO-friendly store name is a crucial part of your success. Make sure it aligns with your brand and products."
-                />
-                <div className="flex flex-col gap-1">
-                  <div
-                    className={`flex items-center border px-2 py-3.5 w-full rounded-md ${
-                      validation.domain ? "border-red-500" : "border-gray-300"
-                    } ${isDomainAvailable ? "border-green-500" : ""}`}
-                  >
-                    <input
-                      type="text"
-                      name="domain"
-                      placeholder="enter your domain name"
-                      className={`w-[90%] focus-visible:outline-none`}
-                      value={storeInfo.domain}
-                      onChange={handleOnChange}
-                    />
-                    <span className="text-gray-500">.expressitbd.com</span>
-                  </div>
-                  <FormValidationMessage message={validation.domain} />
-                  {storeInfo.domain &&
-                    !validation.domain &&
-                    isDomainAvailable && (
-                      <span className="text-green-500">
-                        Domain is available.
-                      </span>
+                  <div className="flex flex-col gap-1">
+                    {field.type == "domain" ? (
+                      <FormDomainField
+                        field={field}
+                        onChange={handleOnChange}
+                      />
+                    ) : field.type == "select" ? (
+                      <FormSelectField
+                        field={field}
+                        onChange={handleOnChange}
+                      />
+                    ) : (
+                      <FormInputField field={field} onChange={handleOnChange} />
                     )}
+                    <FormValidationMessage message={field.error} />
+                  </div>
                 </div>
-              </div>
-              {/* end store subdomain */}
+              ))}
 
-              {/* country */}
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
-                <FormLabelInfo
-                  title="Where's your store located?"
-                  icon={<MapPinPlusIcon color="blue" size={24} weight="bold" />}
-                  description="Set your store's default location so we can optimize store access and speed for your customers."
-                />
-                <div className="flex flex-col gap-1">
-                  <select
-                    name="location"
-                    id=""
-                    className="border px-2 py-3.5 rounded-md focus-visible:outline-none border-gray-300"
-                    value={storeInfo.location}
-                    onChange={handleOnChange}
-                  >
-                    {countryjson
-                      ? countryjson.map((country) => (
-                          <option key={country.code} value={country.name}>
-                            {country.name}
-                          </option>
-                        ))
-                      : ""}
-                  </select>
-                  <FormValidationMessage message={validation.location} />
-                </div>
-              </div>
-              {/* country end */}
-
-              {/* category */}
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
-                <FormLabelInfo
-                  title="What's your Category?"
-                  icon={<ShapesIcon color="blue" size={24} weight="bold" />}
-                  description="Set your store's default category so that we can optimize store access and speed for your customers."
-                />
-                <div className="flex flex-col gap-1">
-                  <select
-                    name="category"
-                    className="border px-2 py-3.5 rounded-md focus-visible:outline-none border-gray-300"
-                    value={storeInfo.category}
-                    onChange={handleOnChange}
-                  >
-                    {categoryjson?.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                  <FormValidationMessage message={validation.category} />
-                </div>
-              </div>
-              {/* category End */}
-
-              {/* currency */}
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
-                <FormLabelInfo
-                  title="Choose store currency"
-                  icon={
-                    <CurrencyCircleDollarIcon
-                      color="blue"
-                      size={24}
-                      weight="bold"
-                    />
-                  }
-                  description="This is the main currency you wish to sell in."
-                />
-                <div className="flex flex-col gap-1">
-                  <select
-                    name="currency"
-                    className="border px-2 py-3.5 rounded-md focus-visible:outline-none border-gray-300"
-                    value={storeInfo.currency}
-                    onChange={handleOnChange}
-                  >
-                    {Object.entries(currencyJson)?.map(([code, cur]) => (
-                      <option key={code} value={code}>
-                        ({code}) {cur}
-                      </option>
-                    ))}
-                  </select>
-                  <FormValidationMessage message={validation.currency} />
-                </div>
-              </div>
-              {/* currency end */}
-
-              {/* email */}
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
-                <FormLabelInfo
-                  title="Store contact email"
-                  icon={
-                    <EnvelopeSimpleIcon color="blue" size={24} weight="bold" />
-                  }
-                  description="This is the email you'll use to send notifications to and receive orders from customers."
-                />
-                <div className="flex flex-col gap-1">
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="How'd you like to call your store?"
-                    className={`border px-2 py-3.5 rounded-md focus-visible:outline-none ${
-                      validation.email ? "border-red-500" : "border-gray-300"
-                    }`}
-                    value={storeInfo.email}
-                    onChange={handleOnChange}
-                  />
-                  <FormValidationMessage message={validation.email} />
-                </div>
-              </div>
-              {/* email end */}
-
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-4">
                 <button
-                  className={`bg-blue-500 text-white px-6 py-3 rounded-md ${
-                    !isFormValid && "opacity-50 cursor-not-allowed"
+                  type="submit"
+                  className={`bg-blue-500 text-white px-6 py-3 rounded-md font-medium transition-all ${
+                    isFormValid
+                      ? "hover:bg-blue-600 active:bg-blue-700"
+                      : "opacity-50 cursor-not-allowed"
                   }`}
                   disabled={!isFormValid}
                 >
                   Create Store
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
