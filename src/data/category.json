@@ -1,0 +1,12 @@
+[
+  { "label": "Fashion", "value": "fashion" },
+  { "label": "Electronics", "value": "electronics" },
+  { "label": "Home & Living", "value": "home-living" },
+  { "label": "Beauty & Health", "value": "beauty-health" },
+  { "label": "Sports & Outdoors", "value": "sports-outdoors" },
+  { "label": "Toys & Games", "value": "toys-games" },
+  { "label": "Books & Stationery", "value": "books-stationery" },
+  { "label": "Automotive", "value": "automotive" },
+  { "label": "Groceries", "value": "groceries" },
+  { "label": "Pet Supplies", "value": "pet-supplies" }
+]

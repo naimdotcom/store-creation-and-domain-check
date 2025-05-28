@@ -6,6 +6,8 @@ import axiosInstance from "@/libs/axiosInstance";
 import { GlobeHemisphereWestIcon, MonitorIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import countryjson from "@/data/country.json";
+import categoryjson from "@/data/category.json";
+import currencyJson from "@/data/currency.json";
 
 type storeInput = {
   storeName: string;
@@ -199,6 +201,7 @@ export default function Home() {
                     value={storeInfo.location}
                     onChange={handleOnChange}
                   >
+                    <option value="">Select a country</option>
                     {countryjson
                       ? countryjson.map((country) => (
                           <option key={country.code} value={country.name}>
@@ -208,6 +211,58 @@ export default function Home() {
                       : ""}
                   </select>
                   <FormValidationMessage message={validation.storeName} />
+                </div>
+              </div>
+              {/* country end */}
+
+              {/* category */}
+              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
+                <FormLabelInfo
+                  title="Choose your store category"
+                  icon={<MonitorIcon color="blue" size={24} weight="bold" />}
+                  description="Select a category that best describes your store's product type."
+                />
+                <div className="flex flex-col gap-1">
+                  <select
+                    name="category"
+                    className="border px-2 py-3.5 rounded-md focus-visible:outline-none border-gray-300"
+                    value={storeInfo.category}
+                    onChange={handleOnChange}
+                  >
+                    <option value="">Select a category</option>
+                    {categoryjson?.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                  <FormValidationMessage message={validation.category} />
+                </div>
+              </div>
+              {/* category End */}
+
+              {/* currency */}
+              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-2">
+                <FormLabelInfo
+                  title="Choose store currency"
+                  icon={<MonitorIcon color="blue" size={24} weight="bold" />}
+                  description="This is the main currency you wish to sell in."
+                />
+                <div className="flex flex-col gap-1">
+                  <select
+                    name="currency"
+                    className="border px-2 py-3.5 rounded-md focus-visible:outline-none border-gray-300"
+                    value={storeInfo.currency}
+                    onChange={handleOnChange}
+                  >
+                    <option value="">Select a category</option>
+                    {Object.entries(currencyJson)?.map(([code, cur]) => (
+                      <option key={code} value={code}>
+                        ({code}) {cur}
+                      </option>
+                    ))}
+                  </select>
+                  <FormValidationMessage message={validation.category} />
                 </div>
               </div>
             </div>
