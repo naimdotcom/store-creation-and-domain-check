@@ -25,7 +25,9 @@ function FormDomainField({ field, onChange }: Props) {
           value={field.value}
           onChange={onChange}
         />
-        <span className="text-gray-500 ml-2">{field.suffix}</span>
+        <span className="text-gray-500 ml-2 text-sm sm:text-base">
+          {field.suffix}
+        </span>
       </div>
       {field.value && !field.error && field.isDomainAvailable && (
         <span className="text-green-500 text-sm mt-1 block">

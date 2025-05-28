@@ -288,10 +288,10 @@ export default function Home() {
                 </div>
               ))}
 
-              <div className="flex justify-end pt-4">
+              <div className="flex sm:justify-end pt-4 ">
                 <button
                   type="submit"
-                  className={`bg-blue-500 text-white px-6 py-3 rounded-md font-medium transition-all ${
+                  className={`bg-blue-500 w-full sm:w-fit text-white px-6 py-3 rounded-md font-medium transition-all ${
                     isFormValid
                       ? "hover:bg-blue-600 active:bg-blue-700"
                       : "opacity-50 cursor-not-allowed"
