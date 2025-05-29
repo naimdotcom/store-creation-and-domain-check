@@ -16,7 +16,7 @@ import countryjson from "@/data/country.json";
 import categoryjson from "@/data/category.json";
 import currencyJson from "@/data/currency.json";
 import { validateEmail } from "@/utils/validation";
-import { StoreInput, ValidationErrors } from "@/types";
+import { FormField, StoreInput, ValidationErrors } from "@/types";
 import { INITIAL_STORE_DATA, INITIAL_VALIDATION } from "@/data/Constant";
 import FormInputField from "@/components/FormInputField";
 import FormSelectField from "@/components/FormSelectField";
@@ -40,7 +40,7 @@ export default function Home() {
     return "";
   };
 
-  const validateField = (name: string, value: string): boolean => {
+  const validateField = useCallback((name: string, value: string): boolean => {
     let error: string = "";
 
     switch (name) {
@@ -79,7 +79,7 @@ export default function Home() {
 
     setValidation((prev) => ({ ...prev, [name]: error }));
     return error === "";
-  };
+  }, []);
 
   const checkDomain = useCallback(async (domain: string) => {
     if (!domain.trim()) {
@@ -175,7 +175,7 @@ export default function Home() {
     }
   };
 
-  const formFields = useMemo(
+  const formFields: FormField[] = useMemo(
     () => [
       {
         name: "storeName",
@@ -192,6 +192,7 @@ export default function Home() {
       {
         name: "domain",
         type: "domain",
+        inputType: "text",
         placeholder: "Enter your domain name",
         title: "Your online store subdomain",
         icon: <GlobeHemisphereWestIcon color="blue" size={24} weight="fill" />,

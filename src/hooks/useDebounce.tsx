@@ -1,7 +1,7 @@
 import { useRef } from "react";
 // ?source stackoverflow: https://stackoverflow.com/questions/77123890/debounce-in-reactjs
 
-export function useDebounce<T extends (...args: any[]) => void>(
+export function useDebounce<T extends (...args: never[]) => unknown>(
   cb: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -11,8 +11,9 @@ export function useDebounce<T extends (...args: any[]) => void>(
     if (timeoutId.current) {
       clearTimeout(timeoutId.current);
     }
+
     timeoutId.current = setTimeout(() => {
-      cb(...args);
+      void cb(...args); // ignore the async return value
     }, delay);
   };
 }

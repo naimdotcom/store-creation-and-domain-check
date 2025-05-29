@@ -1,7 +1,7 @@
 import React from "react";
 
 type Props = {
-  message: string;
+  message: string | null;
 };
 
 const FormValidationMessage = ({ message }: Props) => {

@@ -1,7 +1,8 @@
+import { FormField } from "@/types";
 import React from "react";
 
 type Props = {
-  field: any;
+  field: FormField;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 

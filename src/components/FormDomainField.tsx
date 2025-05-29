@@ -1,19 +1,19 @@
+import { FormField } from "@/types";
 import React from "react";
 
 type Props = {
-  field: any;
+  field: FormField;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 function FormDomainField({ field, onChange }: Props) {
-  console.log("domain", field.isDomainAvailable);
   return (
     <div>
       <div
         className={`flex items-center border px-2 py-3.5 w-full rounded-md transition-colors ${
           field.error
             ? "border-red-500"
-            : field.isDomainAvailable
+            : field.type === "domain" && field.isDomainAvailable
             ? "border-green-500"
             : "border-gray-300"
         }`}
@@ -27,14 +27,16 @@ function FormDomainField({ field, onChange }: Props) {
           onChange={onChange}
         />
         <span className="text-gray-500 ml-2 text-sm sm:text-base">
-          {field.suffix}
+          {field.type == "domain" && field.suffix}
         </span>
       </div>
-      {field.value && !field.error && field.isDomainAvailable && (
-        <span className="text-green-500 text-sm mt-1 block">
-          Domain is available.
-        </span>
-      )}
+      {field.value &&
+        !field.error &&
+        (field.type === "domain" ? field.isDomainAvailable : true) && (
+          <span className="text-green-500 text-sm mt-1 block">
+            Domain is available.
+          </span>
+        )}
     </div>
   );
 }

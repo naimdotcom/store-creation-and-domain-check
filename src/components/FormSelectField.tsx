@@ -1,7 +1,8 @@
+import { FormField } from "@/types";
 import React from "react";
 
 type Props = {
-  field: any;
+  field: FormField;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 };
 
@@ -13,12 +14,15 @@ function FormSelectField({ field, onChange }: Props) {
       value={field.value}
       onChange={onChange}
     >
-      <option value="">{field.placeholder}</option>
-      {field.options.map((option: any) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
+      <option value="">
+        {field.placeholder ? field.placeholder : "Select"}
+      </option>
+      {field.type === "select" &&
+        field.options.map((option: { value: string; label: string }) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
     </select>
   );
 }
