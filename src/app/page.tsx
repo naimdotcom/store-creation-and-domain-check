@@ -21,6 +21,7 @@ import { INITIAL_STORE_DATA, INITIAL_VALIDATION } from "@/data/Constant";
 import FormInputField from "@/components/FormInputField";
 import FormSelectField from "@/components/FormSelectField";
 import FormDomainField from "@/components/FormDomainField";
+import axios from "axios";
 
 export default function Home() {
   const [storeInfo, setStoreInfo] = useState<StoreInput>(INITIAL_STORE_DATA);
@@ -80,7 +81,7 @@ export default function Home() {
     return error === "";
   };
 
-  const checkDomain = async (domain: string) => {
+  const checkDomain = useCallback(async (domain: string) => {
     if (!domain.trim()) {
       setIsDomainAvailable(false);
       return;
@@ -105,7 +106,7 @@ export default function Home() {
         domain: "Error checking domain availability.",
       }));
     }
-  };
+  }, []);
 
   const debouncedCheckDomain = useDebounce(checkDomain, 500);
 
@@ -146,11 +147,31 @@ export default function Home() {
     setIsFormValid(hasNoValidationErrors && allFieldsFilled && isDomainValid);
   }, [storeInfo, validation, isDomainAvailable]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isFormValid) {
       console.log("Creating store with data:", storeInfo);
-      // Handle form submission here
+      const payload = {
+        name: storeInfo.storeName,
+        currency: storeInfo.currency,
+        domain: storeInfo.domain,
+        email: storeInfo.email,
+        country: storeInfo.location,
+        category: storeInfo.category,
+      };
+      try {
+        const res = await axios.post(
+          "https://interview-task-green.vercel.app/task/stores/create",
+          payload
+        );
+        console.log(res);
+        if (res.status === 200) {
+          alert("Store created successfully");
+          setStoreInfo(INITIAL_STORE_DATA);
+        }
+      } catch (error) {
+        console.error("Error creating store:", error);
+      }
     }
   };
 
@@ -243,8 +264,6 @@ export default function Home() {
     ],
     [storeInfo, validation, isDomainAvailable]
   );
-
-  console.log("storeInfo", storeInfo);
 
   return (
     <>

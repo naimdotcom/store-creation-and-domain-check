@@ -6,6 +6,7 @@ type Props = {
 };
 
 function FormDomainField({ field, onChange }: Props) {
+  console.log("domain", field.isDomainAvailable);
   return (
     <div>
       <div
